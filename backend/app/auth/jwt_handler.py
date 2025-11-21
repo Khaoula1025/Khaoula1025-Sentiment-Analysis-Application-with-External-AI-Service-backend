@@ -10,7 +10,13 @@ JWT_ALGORITHM = 'HS256'
 
 from fastapi.security import APIKeyCookie
 
-api_key_cookie = APIKeyCookie(name="access_token")
+# api_key_cookie = APIKeyCookie(name="access_token")
+from fastapi import Cookie, HTTPException
+
+def api_key_cookie(access_token: str = Cookie(None)):
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return access_token
 
 def signJWT(user_id: str) :
     payload = {

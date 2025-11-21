@@ -7,12 +7,13 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.database import engine , Base
 from app.services.huggingface_service import predict_sentiment
+
 app = FastAPI(
     description="API d'analyse de sentiment avec authentification JWT"
 )
 Base.metadata.create_all(bind=engine)
 
-@app.post("/user/signup", tags=["user"])
+@app.post("/signup")
 async def create_user(user: UserSchema = Body(...),db:Session=Depends(get_db)):
     new_User=User(
         email=user.email,
@@ -23,7 +24,7 @@ async def create_user(user: UserSchema = Body(...),db:Session=Depends(get_db)):
     db.refresh(new_User)
     return 'sign up succesfully'
 
-@app.post("/user/login", tags=["user"])
+@app.post("/login")
 async def user_login(response: Response,user: UserLoginSchema = Body(...),db:Session=Depends(get_db)):
     if check_user(user ,db):
         token = signJWT(user.email)
@@ -31,8 +32,8 @@ async def user_login(response: Response,user: UserLoginSchema = Body(...),db:Ses
         key="access_token",
         value=token['access_token'],
         httponly=True,        # JS cannot read it (more secure)
-        samesite="lax",       # or "strict" or "none"
-        secure=False          # True in production (requires HTTPS)
+        samesite="none",       # or "strict" or "none"
+        secure=True          # True in production (requires HTTPS)
     )
         return {'message':'login sucessfull',
                 'token':token}
@@ -40,6 +41,16 @@ async def user_login(response: Response,user: UserLoginSchema = Body(...),db:Ses
     return {
         "error": "Wrong login details!"
     }
+@app.post('/logout')
+async def logout(response:Response):
+       response.delete_cookie(
+        key="access_token",
+        httponly=True,       
+        samesite="none",      
+        secure=True          
+    )
+       return {'logout succesful'}
+
 @app.post("/predict", response_model=SentimentResponse)
 async def predict(request: SentimentRequest, current_user: TokenData = Depends(get_current_user)):
     result = await predict_sentiment(request.text)
