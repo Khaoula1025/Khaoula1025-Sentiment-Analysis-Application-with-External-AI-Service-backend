@@ -31,13 +31,6 @@ def signJWT(user_id: str) :
         "token_type": "bearer"
     }
 
-def decodeJWT(token: str) -> dict:
-    try:
-        decoded_token = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return decoded_token if decoded_token["expires"] >= time.time() else None
-    except:
-        return {}
-    
 def get_current_user(token: str = Depends(api_key_cookie)):
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])

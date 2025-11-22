@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body,Depends,Response
+from fastapi import FastAPI, Body,Depends,Response , HTTPException, status
 from app.models import User
 from app.schema import UserSchema,UserLoginSchema,SentimentRequest,SentimentResponse,TokenData
 from app.auth.jwt_handler import signJWT ,get_current_user
@@ -38,9 +38,10 @@ async def user_login(response: Response,user: UserLoginSchema = Body(...),db:Ses
         return {'message':'login sucessfull',
                 'token':token}
 
-    return {
-        "error": "Wrong login details!"
-    }
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Wrong login details!"
+    )
 @app.post('/logout')
 async def logout(response:Response):
        response.delete_cookie(
@@ -50,6 +51,11 @@ async def logout(response:Response):
         secure=True          
     )
        return {'logout succesful'}
+
+
+@app.get("/verify-token")
+async def verify_token(current_user: TokenData = Depends(get_current_user)):
+    return {"authenticated": True, "email": current_user}
 
 @app.post("/predict", response_model=SentimentResponse)
 async def predict(request: SentimentRequest, current_user: TokenData = Depends(get_current_user)):
