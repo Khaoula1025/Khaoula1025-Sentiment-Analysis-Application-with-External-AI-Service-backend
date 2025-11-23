@@ -31,8 +31,6 @@ def test_predict_endpoint_requires_authentication():
         "/predict",
         json={"text": "This is a test"}
     )
-    
-    # Vérifications
     # L'endpoint doit rejeter la requête (401 Unauthorized ou 403 Forbidden)
     assert response.status_code in [401, 403]
     

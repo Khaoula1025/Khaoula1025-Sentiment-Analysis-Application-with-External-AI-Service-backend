@@ -1,5 +1,5 @@
 from pydantic import BaseModel,EmailStr,Field
-# ... means this field is required 
+
 class UserSchema(BaseModel):
     fullname: str = Field(...)
     email: EmailStr = Field(...)
